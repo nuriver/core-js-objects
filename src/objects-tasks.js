@@ -139,10 +139,17 @@ function makeImmutable(obj) {
  *    makeWord({ a: [0, 1], b: [2, 3], c: [4, 5] }) => 'aabbcc'
  *    makeWord({ H:[0], e: [1], l: [2, 3, 8], o: [4, 6], W:[5], r:[7], d:[9]}) => 'HelloWorld'
  */
-function makeWord(/* lettersObject */) {
-  throw new Error('Not implemented');
+function makeWord(lettersObject) {
+  const lettersArr = [];
+  const keysArr = Object.keys(lettersObject);
+  const valuesArr = Object.values(lettersObject);
+  for (let i = 0; i < keysArr.length; i += 1) {
+    for (let j = 0; j < valuesArr.length; j += 1) {
+      lettersArr[valuesArr[i][j]] = keysArr[i];
+    }
+  }
+  return lettersArr.join('');
 }
-
 /**
  * There is a queue for tickets to a popular movie.
  * The ticket seller sells one ticket at a time strictly in order and give the change.
