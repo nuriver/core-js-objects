@@ -398,32 +398,131 @@ function group(array, keySelector, valueSelector) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  selector: '',
+  element(value) {
+    return new this.MyClass(value, 'element');
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new this.MyClass(`#${value}`, 'id');
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new this.MyClass(`.${value}`, 'class');
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new this.MyClass(`[${value}]`, 'attr');
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new this.MyClass(`:${value}`, 'pseudoClass');
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new this.MyClass(`::${value}`, 'pseudoElement');
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    this.selector = `${selector1.selector} ${combinator} ${selector2.selector}`;
+    return this;
+  },
+  stringify() {
+    return this.selector;
+  },
+
+  MyClass: class {
+    constructor(value, selectorType) {
+      this.selector = value;
+      this.selectorTypes = [selectorType];
+      this.lastType = this.selectorTypes[this.selectorTypes.length - 1];
+    }
+
+    element() {
+      if (this.lastType === 'element')
+        throw new Error(
+          'Element, id and pseudo-element should not occur more then one time inside the selector'
+        );
+      if (this.lastType !== 'element')
+        throw new Error(
+          'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+        );
+    }
+
+    id(value) {
+      if (this.lastType === 'element') {
+        this.selector += `#${value}`;
+        return this;
+      }
+      if (this.lastType === 'id') {
+        throw new Error(
+          'Element, id and pseudo-element should not occur more then one time inside the selector'
+        );
+      }
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    class(value) {
+      if (
+        this.lastType === 'class' ||
+        this.lastType === 'element' ||
+        this.lastType === 'id'
+      ) {
+        this.selector = `${this.selector}.${value}`;
+        this.selectorTypes.push('class');
+        return this;
+      }
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    attr(value) {
+      if (
+        this.lastType !== 'pseudoClass' &&
+        this.lastType !== 'pseudoElement'
+      ) {
+        this.selector = `${this.selector}[${value}]`;
+        this.selectorTypes.push('attr');
+        return this;
+      }
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    pseudoClass(value) {
+      if (this.lastType !== 'pseudoElement') {
+        this.selectorTypes.push('pseudoClass');
+        this.selector = `${this.selector}:${value}`;
+        return this;
+      }
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    pseudoElement(value) {
+      if (!this.selectorTypes.includes('pseudoElement')) {
+        this.selector = `${this.selector}::${value}`;
+        return this;
+      }
+      if (this.selectorTypes.includes('pseudoElement')) {
+        throw new Error(
+          'Element, id and pseudo-element should not occur more then one time inside the selector'
+        );
+      } else {
+        throw new Error(
+          'Element, id and pseudo-element should not occur more then one time inside the selector'
+        );
+      }
+    }
+
+    stringify() {
+      return this.selector;
+    }
   },
 };
 
